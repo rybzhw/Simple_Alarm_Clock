@@ -26,6 +26,25 @@
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
             </intent-filter>
         </receiver>
+        <receiver
+            android:name=".broadcastreciever.AdminReceiver"
+            android:label="@string/activity_receiver"
+            android:description="@string/receiver_desc"
+            android:permission="android.permission.BIND_DEVICE_ADMIN">
+            <meta-data
+                android:name="android.app.device_admin"
+                android:resource="@xml/force_lock_policy" />
+            <intent-filter>
+                <!--
+                    This is the primary action that a DeviceAdminReceiver subclass must handle to be
+                    allowed to manage a device. This is set to the receiver when the user enables
+                    the device admin app. Your code typically handles this in onEnabled(). To be
+                    supported, the receiver must also require the BIND_DEVICE_ADMIN permission so
+                    that other applications cannot abuse it.
+                -->
+                <action android:name="android.app.action.DEVICE_ADMIN_ENABLED" />
+            </intent-filter>
+        </receiver>
 
         <service android:name=".service.AlarmService" />
         <service android:name=".service.RescheduleAlarmsService" />

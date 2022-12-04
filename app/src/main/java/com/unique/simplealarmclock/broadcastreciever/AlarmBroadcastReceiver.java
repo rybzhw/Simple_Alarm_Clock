@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
+import android.util.Log;
 import android.widget.Toast;
 
 import com.unique.simplealarmclock.model.Alarm;
@@ -18,6 +19,7 @@ public class AlarmBroadcastReceiver extends BroadcastReceiver {
     Alarm alarm;
     @Override
     public void onReceive(Context context, Intent intent) {
+        Log.i("AlarmBroadcastReceiver", "onReceive");
         if (Intent.ACTION_BOOT_COMPLETED.equals(intent.getAction())) {
             String toastText = String.format("Alarm Reboot");
             Toast.makeText(context, toastText, Toast.LENGTH_SHORT).show();
@@ -80,6 +82,7 @@ public class AlarmBroadcastReceiver extends BroadcastReceiver {
     }
 
     private void startAlarmService(Context context, Alarm alarm1) {
+        Log.i("AlarmBroadcastReceiver", "startAlarmService");
         Intent intentService = new Intent(context, AlarmService.class);
         Bundle bundle=new Bundle();
         bundle.putSerializable(context.getString(R.string.arg_alarm_obj),alarm1);
@@ -91,6 +94,7 @@ public class AlarmBroadcastReceiver extends BroadcastReceiver {
         }
     }
     private void startRescheduleAlarmsService(Context context) {
+        Log.i("AlarmBroadcastReceiver", "startRescheduleAlarmsService");
         Intent intentService = new Intent(context, RescheduleAlarmsService.class);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             context.startForegroundService(intentService);

@@ -4,4 +4,6 @@
     <string name="bundle_alarm_obj">BundleAlarmObject</string>
     <string name="alarm_title">My Alarm</string>
     <string name="dayNightTheme">DayNightTheme</string>
+    <string name="activity_receiver">Receiver</string>
+    <string name="receiver_desc">Allows to lock the screen</string>
 </resources>

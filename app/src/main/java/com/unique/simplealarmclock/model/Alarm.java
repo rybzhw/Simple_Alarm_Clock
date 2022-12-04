@@ -12,6 +12,7 @@ import androidx.annotation.NonNull;
 import androidx.room.Entity;
 import androidx.room.PrimaryKey;
 
+import com.unique.simplealarmclock.service.AlarmService;
 import com.unique.simplealarmclock.util.DayUtil;
 import com.unique.simplealarmclock.R;
 import com.unique.simplealarmclock.broadcastreciever.AlarmBroadcastReceiver;
@@ -24,12 +25,13 @@ public class Alarm implements Serializable {
     @PrimaryKey
     @NonNull
     private int alarmId;
-    private int hour, minute;
+    private int hour, minute, second;
     private boolean started, recurring;
     private boolean monday, tuesday, wednesday, thursday, friday, saturday, sunday;
     private String title;
     private String tone;
     private boolean vibrate;
+    private long millisecond;
 
     public Alarm(int alarmId, int hour, int minute, String title, boolean started, boolean recurring, boolean monday, boolean tuesday, boolean wednesday, boolean thursday, boolean friday, boolean saturday, boolean sunday, String tone,boolean vibrate) {
         this.alarmId = alarmId;
@@ -47,6 +49,8 @@ public class Alarm implements Serializable {
         this.title = title;
         this.vibrate=vibrate;
         this.tone=tone;
+        this.second = 0;
+        this.millisecond = 0;
     }
     public int getHour() {
         return hour;
@@ -132,26 +136,33 @@ public class Alarm implements Serializable {
         this.vibrate = vibrate;
     }
 
-    public void schedule(Context context) {
+    public int getSecond() {
+        return second;
+    }
+
+    public void setSecond(int second) {
+        this.second = second;
+    }
+
+    public long getMillisecond() {
+        return millisecond;
+    }
+
+    public void setMillisecond(long millisecond) {
+        this.millisecond = millisecond;
+    }
+
+    private void schedule(Context context, Calendar calendar) {
+        Log.i("Alarm", "schedule calendar " + calendar.getTime());
         AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
+
+        setMillisecond(calendar.getTimeInMillis());
 
         Intent intent = new Intent(context, AlarmBroadcastReceiver.class);
         Bundle bundle=new Bundle();
         bundle.putSerializable(context.getString(R.string.arg_alarm_obj),this);
         intent.putExtra(context.getString(R.string.bundle_alarm_obj),bundle);
         PendingIntent alarmPendingIntent = PendingIntent.getBroadcast(context, alarmId, intent, 0);
-
-        Calendar calendar = Calendar.getInstance();
-        calendar.setTimeInMillis(System.currentTimeMillis());
-        calendar.set(Calendar.HOUR_OF_DAY, hour);
-        calendar.set(Calendar.MINUTE, minute);
-        calendar.set(Calendar.SECOND, 0);
-        calendar.set(Calendar.MILLISECOND, 0);
-
-        // if alarm time has already passed, increment day by 1
-        if (calendar.getTimeInMillis() <= System.currentTimeMillis()) {
-            calendar.set(Calendar.DAY_OF_MONTH, calendar.get(Calendar.DAY_OF_MONTH) + 1);
-        }
 
         if (!recurring) {
             String toastText = null;
@@ -167,6 +178,7 @@ public class Alarm implements Serializable {
                     calendar.getTimeInMillis(),
                     alarmPendingIntent
             );
+            Log.i("Alarm", "schedule setExact " + calendar.getTimeInMillis());
         } else {
             String toastText = String.format("Recurring Alarm %s scheduled for %s at %02d:%02d", title, getRecurringDaysText(), hour, minute);
             Toast.makeText(context, toastText, Toast.LENGTH_LONG).show();
@@ -178,9 +190,39 @@ public class Alarm implements Serializable {
                     RUN_DAILY,
                     alarmPendingIntent
             );
+            Log.i("Alarm", "schedule setRepeating " + calendar.getTimeInMillis());
         }
 
         this.started = true;
+    }
+
+    public void schedule(Context context, int second) {
+        Log.i("Alarm", "schedule second " + second);
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTimeInMillis(System.currentTimeMillis());
+        calendar.add(Calendar.SECOND, second);
+
+        schedule(context, calendar);
+    }
+
+    public void schedule(Context context) {
+        Log.i("Alarm", "schedule");
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTimeInMillis(System.currentTimeMillis());
+        calendar.set(Calendar.HOUR_OF_DAY, hour);
+        calendar.set(Calendar.MINUTE, minute);
+        calendar.set(Calendar.SECOND, getSecond());
+        calendar.set(Calendar.MILLISECOND, 0);
+
+        long deltaSecond = (calendar.getTimeInMillis() - System.currentTimeMillis()) / 1000;
+        Log.i("Alarm", "schedule deltaSecond " + deltaSecond);
+        // if alarm time has already passed, increment day by 1
+        if (calendar.getTimeInMillis() <= System.currentTimeMillis()) {
+            Log.i("Alarm", "schedule time has already passed.");
+            calendar.set(Calendar.DAY_OF_MONTH, calendar.get(Calendar.DAY_OF_MONTH) + 1);
+        }
+
+        schedule(context, calendar);
     }
 
     public void cancelAlarm(Context context) {
@@ -227,5 +269,35 @@ public class Alarm implements Serializable {
 
     public String getTitle() {
         return title;
+    }
+
+    public int getNextAlarmSub() {
+        // delta seconds
+        int baseSecond = 8 * 60;
+        int minSecond = 3 * 60;
+        int changeInterval = 25 * 60;
+        int workSecond = 1 * 60 * 60;
+
+        // debug data
+        /*baseSecond = 15;
+        minSecond = 5;
+        changeInterval = 20;
+        workSecond = 60;*/
+
+        // test data
+        /*baseSecond = 60;
+        minSecond = 20;
+        changeInterval = 20;
+        workSecond = 3 * 60;*/
+
+        long deltaSecond = (System.currentTimeMillis() - getMillisecond()) / 1000;
+        Log.i("Alarm", "getNextAlarmSub " + System.currentTimeMillis() + ":" +  getMillisecond() + ":" + deltaSecond);
+        if (deltaSecond >= workSecond)
+            return -1;
+
+        int deltaScale = Math.max(1, (int)(deltaSecond / changeInterval));
+        int newSecond = (int)(baseSecond / deltaScale);
+
+        return Math.max(minSecond, newSecond);
     }
 }

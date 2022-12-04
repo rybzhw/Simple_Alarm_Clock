@@ -5,6 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".activities.MainActivity">
+
     <fragment
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -17,4 +18,41 @@
         app:defaultNavHost="true"
         app:navGraph="@navigation/nav_graph"
         />
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="300dp"
+        android:orientation="horizontal"
+        android:visibility="invisible"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/activity_main_nav_host_fragment">
+
+        <Button
+            android:id="@+id/btnTest1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:onClick="startTest"
+            android:text="Test1" />
+
+        <Button
+            android:id="@+id/btnTest2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:onClick="startTest2"
+            android:text="Test2" />
+
+        <Button
+            android:id="@+id/btnTest3"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:onClick="showNotification"
+            android:text="Test3" />
+    </LinearLayout>
+
 </androidx.constraintlayout.widget.ConstraintLayout>

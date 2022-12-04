@@ -3,6 +3,8 @@ package com.unique.simplealarmclock.service;
 import android.app.Notification;
 import android.app.PendingIntent;
 import android.app.Service;
+import android.app.admin.DevicePolicyManager;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.media.MediaPlayer;
@@ -11,60 +13,69 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.os.Vibrator;
+import android.util.Log;
+import android.widget.Toast;
 
 import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
+import androidx.lifecycle.ViewModelProviders;
 
+import com.unique.simplealarmclock.broadcastreciever.AdminReceiver;
 import com.unique.simplealarmclock.model.Alarm;
 import com.unique.simplealarmclock.R;
 import com.unique.simplealarmclock.activities.RingActivity;
+import com.unique.simplealarmclock.viewmodel.AlarmListViewModel;
 
 import java.io.IOException;
+import java.util.Calendar;
+import java.util.Random;
 
 import static com.unique.simplealarmclock.App.CHANNEL_ID;
 
 public class AlarmService extends Service {
-    private MediaPlayer mediaPlayer;
-    private Vibrator vibrator;
-    Alarm alarm;
-    Uri ringtone;
+    private ComponentName mCN;
+    private DevicePolicyManager dpm;
+    private Alarm alarm;
+    //private AlarmListViewModel alarmsListViewModel;
+
     @Override
     public void onCreate() {
         super.onCreate();
-        mediaPlayer = new MediaPlayer();
-        mediaPlayer.setLooping(true);
-        vibrator = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
-        ringtone= RingtoneManager.getActualDefaultRingtoneUri(this.getBaseContext(), RingtoneManager.TYPE_ALARM);
+
+        //alarmsListViewModel = ViewModelProviders.of(this.getBaseContext()).get(AlarmListViewModel.class);
+
+        mCN = new ComponentName(this.getBaseContext(), AdminReceiver.class); // Receiver, not Activity!
+        dpm = (DevicePolicyManager)getSystemService(DEVICE_POLICY_SERVICE);;
     }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+        Log.i("AlarmService", "onStartCommand enter.");
+
+        // read intent
         Bundle bundle=intent.getBundleExtra(getString(R.string.bundle_alarm_obj));
         if (bundle!=null)
             alarm =(Alarm)bundle.getSerializable(getString(R.string.arg_alarm_obj));
-        Intent notificationIntent = new Intent(this, RingActivity.class);
-        notificationIntent.putExtra(getString(R.string.bundle_alarm_obj),bundle);
-//        notificationIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_NO_USER_ACTION | Intent.FLAG_ACTIVITY_SINGLE_TOP);
-        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, notificationIntent, PendingIntent.FLAG_UPDATE_CURRENT);
-        String alarmTitle=getString(R.string.alarm_title);
-        if(alarm!=null) {
-            alarmTitle = alarm.getTitle();
-            try {
-                mediaPlayer.setDataSource(this.getBaseContext(), Uri.parse(alarm.getTone()));
-                mediaPlayer.prepareAsync();
-            } catch (IOException ex) {
-                ex.printStackTrace();
-            }
-        }
-        else{
 
-            try {
-                mediaPlayer.setDataSource(this.getBaseContext(),ringtone);
-                mediaPlayer.prepareAsync();
-            } catch (IOException ex) {
-                ex.printStackTrace();
-            }
-        }
+        // show notification
+        showNotification();
+
+        // dismiss alarm
+        dismissAlarm();
+
+        // set next lock alarm
+        onAlarm(intent);
+
+        // lock now
+        lockScreen();
+
+        stopSelf();
+
+        return START_STICKY;
+    }
+
+    private void showNotification() {
+        String alarmTitle=getString(R.string.alarm_title);
         Notification notification = new NotificationCompat.Builder(this, CHANNEL_ID)
                 .setContentTitle("Ring Ring .. Ring Ring")
                 .setContentText(alarmTitle)
@@ -73,30 +84,50 @@ public class AlarmService extends Service {
                 .setCategory(NotificationCompat.CATEGORY_ALARM)
                 .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
                 .setPriority(NotificationCompat.PRIORITY_MAX)
-                .setFullScreenIntent(pendingIntent,true)
+//                .setFullScreenIntent(pendingIntent,true)
                 .build();
-        mediaPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
-            @Override
-            public void onPrepared(MediaPlayer mediaPlayer) {
-                mediaPlayer.start();
-            }
-        });
-
-        if(alarm.isVibrate()) {
-            long[] pattern = {0, 100, 1000};
-            vibrator.vibrate(pattern, 0);
-        }
         startForeground(1, notification);
+    }
 
-        return START_STICKY;
+    private void dismissAlarm(){
+        if(alarm!=null) {
+            alarm.setStarted(false);
+            alarm.cancelAlarm(getBaseContext());
+            //alarmsListViewModel.update(alarm);
+        }
+    }
+
+    private void lockScreen(){
+        Log.i("AlarmService", "lockScreen enter.");
+        if (dpm.isAdminActive(mCN)) {
+            Log.i("AlarmService", "lockNow.");
+            dpm.lockNow();
+        }
+        else{
+            Log.i("AlarmService", "not admin.");
+            Toast.makeText(this.getBaseContext(), "not admin", Toast.LENGTH_LONG).show();
+        }
+        Log.i("AlarmService", "lockScreen leave.");
+    }
+
+    private void onAlarm(Intent intent){
+        Log.i("AlarmService", "onAlarm enter.");
+        if(alarm==null)
+            return;
+
+        int nextSecond = alarm.getNextAlarmSub();
+        Log.i("AlarmService", "nextSecond " + nextSecond);
+        if (nextSecond <= 0)
+            return;
+
+        alarm.schedule(getApplicationContext(), nextSecond);
+
+        Log.i("AlarmService", "onAlarm leave.");
     }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
-
-        mediaPlayer.stop();
-        vibrator.cancel();
     }
 
     @Nullable
