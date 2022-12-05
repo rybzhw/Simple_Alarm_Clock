@@ -279,9 +279,9 @@ public class Alarm implements Serializable {
         int workSecond = 1 * 60 * 60;
 
         // debug data
-        /*baseSecond = 15;
-        minSecond = 5;
-        changeInterval = 20;
+        /*baseSecond = 8;
+        minSecond = 3;
+        changeInterval = 25;
         workSecond = 60;*/
 
         // test data
@@ -295,7 +295,7 @@ public class Alarm implements Serializable {
         if (deltaSecond >= workSecond)
             return -1;
 
-        int deltaScale = Math.max(1, (int)(deltaSecond / changeInterval));
+        int deltaScale = Math.max(1, (int)(deltaSecond / changeInterval) + 1);
         int newSecond = (int)(baseSecond / deltaScale);
 
         return Math.max(minSecond, newSecond);
