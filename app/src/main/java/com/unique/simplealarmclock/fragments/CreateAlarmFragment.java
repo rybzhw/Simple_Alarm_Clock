@@ -126,17 +126,21 @@ public class CreateAlarmFragment extends Fragment {
                 TimePickerUtil.getTimePickerMinute(fragmentCreateAlarmBinding.fragmentCreatealarmTimePicker),
                 alarmTitle,
                 true,
-                fragmentCreateAlarmBinding.fragmentCreatealarmRecurring.isChecked(),
-                fragmentCreateAlarmBinding.fragmentCreatealarmCheckMon.isChecked(),
-                fragmentCreateAlarmBinding.fragmentCreatealarmCheckTue.isChecked(),
-                fragmentCreateAlarmBinding.fragmentCreatealarmCheckWed.isChecked(),
-                fragmentCreateAlarmBinding.fragmentCreatealarmCheckThu.isChecked(),
-                fragmentCreateAlarmBinding.fragmentCreatealarmCheckFri.isChecked(),
-                fragmentCreateAlarmBinding.fragmentCreatealarmCheckSat.isChecked(),
-                fragmentCreateAlarmBinding.fragmentCreatealarmCheckSun.isChecked(),
+                true,
+                false,
+                false,
+                false,
+                false,
+                false,
+                false,
+                false,
                 tone,
                 isVibrate
         );
+        alarm.setMaxLockTime(Float.parseFloat(fragmentCreateAlarmBinding.etnMaxLockTime.getText().toString()));
+        alarm.setMinLockTime(Float.parseFloat(fragmentCreateAlarmBinding.etnMinLockTime.getText().toString()));
+        alarm.setChangeInterval(Float.parseFloat(fragmentCreateAlarmBinding.etnChangeInterval.getText().toString()));
+        alarm.setWorkTime(Float.parseFloat(fragmentCreateAlarmBinding.etnWorkTime.getText().toString()));
 
         createAlarmViewModel.insert(alarm);
 
@@ -155,17 +159,23 @@ public class CreateAlarmFragment extends Fragment {
                 TimePickerUtil.getTimePickerMinute(fragmentCreateAlarmBinding.fragmentCreatealarmTimePicker),
                 alarmTitle,
                 true,
-                fragmentCreateAlarmBinding.fragmentCreatealarmRecurring.isChecked(),
-                fragmentCreateAlarmBinding.fragmentCreatealarmCheckMon.isChecked(),
-                fragmentCreateAlarmBinding.fragmentCreatealarmCheckTue.isChecked(),
-                fragmentCreateAlarmBinding.fragmentCreatealarmCheckWed.isChecked(),
-                fragmentCreateAlarmBinding.fragmentCreatealarmCheckThu.isChecked(),
-                fragmentCreateAlarmBinding.fragmentCreatealarmCheckFri.isChecked(),
-                fragmentCreateAlarmBinding.fragmentCreatealarmCheckSat.isChecked(),
-                fragmentCreateAlarmBinding.fragmentCreatealarmCheckSun.isChecked(),
+                true,
+                false,
+                false,
+                false,
+                false,
+                false,
+                false,
+                false,
                 tone,
                 isVibrate
         );
+
+        alarm.setMaxLockTime(Float.parseFloat(fragmentCreateAlarmBinding.etnMaxLockTime.getText().toString()));
+        alarm.setMinLockTime(Float.parseFloat(fragmentCreateAlarmBinding.etnMinLockTime.getText().toString()));
+        alarm.setChangeInterval(Float.parseFloat(fragmentCreateAlarmBinding.etnChangeInterval.getText().toString()));
+        alarm.setWorkTime(Float.parseFloat(fragmentCreateAlarmBinding.etnWorkTime.getText().toString()));
+
         createAlarmViewModel.update(updatedAlarm);
         updatedAlarm.schedule(getContext());
     }

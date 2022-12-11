@@ -87,6 +87,12 @@ public class MainActivity extends AppCompatActivity {
                 RingtoneManager.getActualDefaultRingtoneUri(getBaseContext(), RingtoneManager.TYPE_ALARM).toString(),
                 false
         );
+
+        alarm.setMaxLockTime(8/(float)60);
+        alarm.setMinLockTime(2/(float)60);
+        alarm.setChangeInterval(20/(float)60);
+        alarm.setWorkTime(60/(float)60);
+
         alarm.schedule(this, 8);
 
         String toastText = String.format("Alarm startTest");
@@ -115,6 +121,12 @@ public class MainActivity extends AppCompatActivity {
                 RingtoneManager.getActualDefaultRingtoneUri(getBaseContext(), RingtoneManager.TYPE_ALARM).toString(),
                 false
         );
+
+        alarm.setMaxLockTime(8/(float)60);
+        alarm.setMinLockTime(2/(float)60);
+        alarm.setChangeInterval(20/(float)60);
+        alarm.setWorkTime(60/(float)60);
+
         alarm.setSecond(calendar.get(Calendar.SECOND));
         alarm.schedule(this);
 

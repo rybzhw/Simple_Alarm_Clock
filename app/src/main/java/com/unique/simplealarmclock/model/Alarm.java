@@ -32,6 +32,7 @@ public class Alarm implements Serializable {
     private String tone;
     private boolean vibrate;
     private long millisecond;
+    private float maxLockTime, minLockTime, changeInterval, workTime;
 
     public Alarm(int alarmId, int hour, int minute, String title, boolean started, boolean recurring, boolean monday, boolean tuesday, boolean wednesday, boolean thursday, boolean friday, boolean saturday, boolean sunday, String tone,boolean vibrate) {
         this.alarmId = alarmId;
@@ -150,6 +151,34 @@ public class Alarm implements Serializable {
 
     public void setMillisecond(long millisecond) {
         this.millisecond = millisecond;
+    }
+
+    public float getMaxLockTime() {
+        return maxLockTime;
+    }
+    public void setMaxLockTime(float maxLockTime) {
+        this.maxLockTime = maxLockTime;
+    }
+
+    public float getMinLockTime() {
+        return minLockTime;
+    }
+    public void setMinLockTime(float minLockTime) {
+        this.minLockTime = minLockTime;
+    }
+
+    public float getChangeInterval() {
+        return changeInterval;
+    }
+    public void setChangeInterval(float changeInterval) {
+        this.changeInterval = changeInterval;
+    }
+
+    public float getWorkTime() {
+        return workTime;
+    }
+    public void setWorkTime(float workTime) {
+        this.workTime = workTime;
     }
 
     private void schedule(Context context, Calendar calendar) {
@@ -273,10 +302,10 @@ public class Alarm implements Serializable {
 
     public int getNextAlarmSub() {
         // delta seconds
-        int baseSecond = 8 * 60;
-        int minSecond = 3 * 60;
-        int changeInterval = 25 * 60;
-        int workSecond = 1 * 60 * 60;
+        int baseSecond = (int)(maxLockTime * 60);
+        int minSecond = (int)(minLockTime * 60);
+        int changeIntervalSecond = (int)(changeInterval * 60);
+        int workSecond = (int)(workTime * 60);
 
         // debug data
         /*baseSecond = 8;
@@ -295,7 +324,7 @@ public class Alarm implements Serializable {
         if (deltaSecond >= workSecond)
             return -1;
 
-        int deltaScale = Math.max(1, (int)(deltaSecond / changeInterval) + 1);
+        int deltaScale = Math.max(1, (int)(deltaSecond / changeIntervalSecond) + 1);
         int newSecond = (int)(baseSecond / deltaScale);
 
         return Math.max(minSecond, newSecond);
