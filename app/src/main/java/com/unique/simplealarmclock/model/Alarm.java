@@ -1,6 +1,9 @@
 package com.unique.simplealarmclock.model;
 
+import static android.app.PendingIntent.FLAG_UPDATE_CURRENT;
+
 import android.app.AlarmManager;
+import android.app.Application;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
@@ -12,7 +15,7 @@ import androidx.annotation.NonNull;
 import androidx.room.Entity;
 import androidx.room.PrimaryKey;
 
-import com.unique.simplealarmclock.service.AlarmService;
+import com.unique.simplealarmclock.data.AlarmRepository;
 import com.unique.simplealarmclock.util.DayUtil;
 import com.unique.simplealarmclock.R;
 import com.unique.simplealarmclock.broadcastreciever.AlarmBroadcastReceiver;
@@ -185,42 +188,26 @@ public class Alarm implements Serializable {
         Log.i("Alarm", "schedule calendar " + calendar.getTime());
         AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
 
-        setMillisecond(calendar.getTimeInMillis());
-
         Intent intent = new Intent(context, AlarmBroadcastReceiver.class);
         Bundle bundle=new Bundle();
         bundle.putSerializable(context.getString(R.string.arg_alarm_obj),this);
         intent.putExtra(context.getString(R.string.bundle_alarm_obj),bundle);
-        PendingIntent alarmPendingIntent = PendingIntent.getBroadcast(context, alarmId, intent, 0);
+        PendingIntent alarmPendingIntent = PendingIntent.getBroadcast(context, alarmId, intent, FLAG_UPDATE_CURRENT);
 
-        if (!recurring) {
-            String toastText = null;
-            try {
-                toastText = String.format("One Time Alarm %s scheduled for %s at %02d:%02d", title, DayUtil.toDay(calendar.get(Calendar.DAY_OF_WEEK)), hour, minute);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-            Toast.makeText(context, toastText, Toast.LENGTH_LONG).show();
-
-            alarmManager.setExact(
-                    AlarmManager.RTC_WAKEUP,
-                    calendar.getTimeInMillis(),
-                    alarmPendingIntent
-            );
-            Log.i("Alarm", "schedule setExact " + calendar.getTimeInMillis());
-        } else {
-            String toastText = String.format("Recurring Alarm %s scheduled for %s at %02d:%02d", title, getRecurringDaysText(), hour, minute);
-            Toast.makeText(context, toastText, Toast.LENGTH_LONG).show();
-
-            final long RUN_DAILY = 24 * 60 * 60 * 1000;
-            alarmManager.setRepeating(
-                    AlarmManager.RTC_WAKEUP,
-                    calendar.getTimeInMillis(),
-                    RUN_DAILY,
-                    alarmPendingIntent
-            );
-            Log.i("Alarm", "schedule setRepeating " + calendar.getTimeInMillis());
+        String toastText = null;
+        try {
+            toastText = String.format("One Time Alarm %s scheduled for %s at %02d:%02d", title, DayUtil.toDay(calendar.get(Calendar.DAY_OF_WEEK)), hour, minute);
+        } catch (Exception e) {
+            e.printStackTrace();
         }
+        Toast.makeText(context, toastText, Toast.LENGTH_LONG).show();
+
+        alarmManager.setExact(
+                AlarmManager.RTC_WAKEUP,
+                calendar.getTimeInMillis(),
+                alarmPendingIntent
+        );
+        Log.i("Alarm", "schedule setExact " + calendar.getTimeInMillis());
 
         this.started = true;
     }
@@ -249,9 +236,24 @@ public class Alarm implements Serializable {
         if (calendar.getTimeInMillis() <= System.currentTimeMillis()) {
             Log.i("Alarm", "schedule time has already passed.");
             calendar.set(Calendar.DAY_OF_MONTH, calendar.get(Calendar.DAY_OF_MONTH) + 1);
+//            calendar.setTimeInMillis(System.currentTimeMillis());
+//            calendar.add(Calendar.SECOND, 5);
         }
 
+        setMillisecond(calendar.getTimeInMillis());
+        Log.i("Alarm", "schedule put " + getMillisecond() + " Id " + alarmId);
+
         schedule(context, calendar);
+    }
+
+    public void scheduleRecurring(Context context, Application application) {
+        Log.i("Alarm", "scheduleRecurring");
+
+        schedule(context);
+
+        AlarmRepository alarmRepository = new AlarmRepository(application);
+        alarmRepository.update(this);
+        Log.i("Alarm", "scheduleRecurring " + getMillisecond() + " Id " + getAlarmId());
     }
 
     public void cancelAlarm(Context context) {

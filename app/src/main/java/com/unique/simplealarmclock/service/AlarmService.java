@@ -1,48 +1,32 @@
 package com.unique.simplealarmclock.service;
 
 import android.app.Notification;
-import android.app.PendingIntent;
-import android.app.Service;
 import android.app.admin.DevicePolicyManager;
 import android.content.ComponentName;
-import android.content.Context;
 import android.content.Intent;
-import android.media.MediaPlayer;
-import android.media.RingtoneManager;
-import android.net.Uri;
 import android.os.Bundle;
 import android.os.IBinder;
-import android.os.Vibrator;
 import android.util.Log;
 import android.widget.Toast;
 
 import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
-import androidx.lifecycle.ViewModelProviders;
+import androidx.lifecycle.LifecycleService;
 
 import com.unique.simplealarmclock.broadcastreciever.AdminReceiver;
 import com.unique.simplealarmclock.model.Alarm;
 import com.unique.simplealarmclock.R;
-import com.unique.simplealarmclock.activities.RingActivity;
-import com.unique.simplealarmclock.viewmodel.AlarmListViewModel;
-
-import java.io.IOException;
-import java.util.Calendar;
-import java.util.Random;
 
 import static com.unique.simplealarmclock.App.CHANNEL_ID;
 
-public class AlarmService extends Service {
+public class AlarmService extends LifecycleService {
     private ComponentName mCN;
     private DevicePolicyManager dpm;
     private Alarm alarm;
-    //private AlarmListViewModel alarmsListViewModel;
 
     @Override
     public void onCreate() {
         super.onCreate();
-
-        //alarmsListViewModel = ViewModelProviders.of(this.getBaseContext()).get(AlarmListViewModel.class);
 
         mCN = new ComponentName(this.getBaseContext(), AdminReceiver.class); // Receiver, not Activity!
         dpm = (DevicePolicyManager)getSystemService(DEVICE_POLICY_SERVICE);;
@@ -50,12 +34,13 @@ public class AlarmService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+        super.onStartCommand(intent, flags, startId);
         Log.i("AlarmService", "onStartCommand enter.");
 
         // read intent
-        Bundle bundle=intent.getBundleExtra(getString(R.string.bundle_alarm_obj));
-        if (bundle!=null)
-            alarm =(Alarm)bundle.getSerializable(getString(R.string.arg_alarm_obj));
+        Bundle bundle = intent.getBundleExtra(getString(R.string.bundle_alarm_obj));
+        if (bundle != null)
+            alarm = (Alarm) bundle.getSerializable(getString(R.string.arg_alarm_obj));
 
         // show notification
         showNotification();
@@ -93,7 +78,6 @@ public class AlarmService extends Service {
         if(alarm!=null) {
             alarm.setStarted(false);
             alarm.cancelAlarm(getBaseContext());
-            //alarmsListViewModel.update(alarm);
         }
     }
 
@@ -117,8 +101,10 @@ public class AlarmService extends Service {
 
         int nextSecond = alarm.getNextAlarmSub();
         Log.i("AlarmService", "nextSecond " + nextSecond);
-        if (nextSecond <= 0)
+        if (nextSecond <= 0) {
+            alarm.scheduleRecurring(getApplicationContext(), getApplication());
             return;
+        }
 
         alarm.schedule(getApplicationContext(), nextSecond);
 
@@ -133,6 +119,7 @@ public class AlarmService extends Service {
     @Nullable
     @Override
     public IBinder onBind(Intent intent) {
+        super.onBind(intent);
         return null;
     }
 }

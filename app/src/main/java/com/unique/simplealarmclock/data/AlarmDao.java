@@ -22,7 +22,7 @@ public interface AlarmDao {
     @Query("SELECT * FROM alarm_table ORDER BY alarmId ASC")
     LiveData<List<Alarm>> getAlarms();
 
-    @Update
+    @Update(onConflict = OnConflictStrategy.IGNORE)
     void update(Alarm alarm);
 
     @Query("Delete from alarm_table where alarmId = :alarmID")

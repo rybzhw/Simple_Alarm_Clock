@@ -110,7 +110,7 @@ public class MainActivity extends AppCompatActivity {
                 calendar.get(Calendar.MINUTE),
                 "Snooze",
                 true,
-                false,
+                true,
                 false,
                 false,
                 false,

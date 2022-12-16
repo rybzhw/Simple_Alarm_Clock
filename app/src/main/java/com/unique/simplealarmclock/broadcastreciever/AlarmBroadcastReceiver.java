@@ -29,13 +29,14 @@ public class AlarmBroadcastReceiver extends BroadcastReceiver {
             Bundle bundle=intent.getBundleExtra(context.getString(R.string.bundle_alarm_obj));
             if (bundle!=null)
                 alarm =(Alarm)bundle.getSerializable(context.getString(R.string.arg_alarm_obj));
+            Log.i("Alarm", "schedule get " + alarm.getMillisecond() + " Id " + alarm.getAlarmId());
             String toastText = String.format("Alarm Received");
             Toast.makeText(context, toastText, Toast.LENGTH_SHORT).show();
             if(alarm!=null) {
                 if (!alarm.isRecurring()) {
                     startAlarmService(context, alarm);
                 } else {
-                    if (isAlarmToday(alarm)) {
+                    if (true || isAlarmToday(alarm)) {
                         startAlarmService(context, alarm);
                     }
                 }
